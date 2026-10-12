@@ -139,13 +139,31 @@ ph = PasswordHasher()
 # ------------------------------------------------------------------- app
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    app.state.redis = aioredis.from_url(REDIS_URL, decode_responses=True)
+    print("RetroTube: Initializing backend...")
+    try:
+        app.state.redis = aioredis.from_url(REDIS_URL, decode_responses=True)
+        await app.state.redis.ping()
+        print("RetroTube: Connected to Redis.")
+    except Exception as e:
+        print(f"RetroTube WARNING: Could not connect to Redis ({e}).")
+
     app.state.http = httpx.AsyncClient(timeout=10)
-    async with engine.begin() as conn:  # dev convenience; use Alembic in production
-        await conn.run_sync(Base.metadata.create_all)
+    try:
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+        print("RetroTube: Connected to PostgreSQL database and verified tables.")
+    except Exception as e:
+        print(f"RetroTube FATAL: Database initialization failed: {e}")
+        raise e
+
+    print("RetroTube: Startup complete! Listening for traffic.")
     yield
     await app.state.http.aclose()
-    await app.state.redis.aclose()
+    if hasattr(app.state, "redis"):
+        try:
+            await app.state.redis.aclose()
+        except Exception:
+            pass
     await engine.dispose()
 
 

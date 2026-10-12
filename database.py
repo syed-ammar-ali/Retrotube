@@ -11,6 +11,9 @@ from config import get_settings
 
 settings = get_settings()
 raw_db_url = settings.DATABASE_URL
+if raw_db_url.startswith("${{"):
+    print(f"RetroTube CRITICAL ERROR: DATABASE_URL is '{raw_db_url}'. Railway could not resolve the variable name! Check the service name in Railway.")
+
 if raw_db_url.startswith("postgres://"):
     DATABASE_URL = raw_db_url.replace("postgres://", "postgresql+asyncpg://", 1)
 elif raw_db_url.startswith("postgresql://") and not raw_db_url.startswith("postgresql+asyncpg://"):
