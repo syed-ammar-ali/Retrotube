@@ -10,7 +10,13 @@ from sqlalchemy.ext.asyncio import (
 from config import get_settings
 
 settings = get_settings()
-DATABASE_URL = settings.DATABASE_URL
+raw_db_url = settings.DATABASE_URL
+if raw_db_url.startswith("postgres://"):
+    DATABASE_URL = raw_db_url.replace("postgres://", "postgresql+asyncpg://", 1)
+elif raw_db_url.startswith("postgresql://") and not raw_db_url.startswith("postgresql+asyncpg://"):
+    DATABASE_URL = raw_db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+else:
+    DATABASE_URL = raw_db_url
 
 engine = create_async_engine(
     DATABASE_URL,
