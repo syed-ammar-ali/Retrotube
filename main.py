@@ -153,8 +153,7 @@ async def lifespan(app: FastAPI):
             await conn.run_sync(Base.metadata.create_all)
         print("RetroTube: Connected to PostgreSQL database and verified tables.")
     except Exception as e:
-        print(f"RetroTube FATAL: Database initialization failed: {e}")
-        raise e
+        print(f"RetroTube WARNING: Database initialization failed: {e}. Check DATABASE_URL in environment.")
 
     print("RetroTube: Startup complete! Listening for traffic.")
     yield

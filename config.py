@@ -14,9 +14,14 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    YT_API_KEY: str = Field(..., description="YouTube Data API v3 key")
+    YT_API_KEY: str = Field(
+        "AIzaSyDvlMdXAYOb928nWc7zNHjfWW8NRPEsKoc",
+        description="YouTube Data API v3 key",
+    )
     SECRET_KEY: str = Field(
-        ..., min_length=32, description="Secret key for signing sessions (min 32 chars)"
+        "retrotube-dev-secret-key-32-chars-long-minimum-random!",
+        min_length=32,
+        description="Secret key for signing sessions (min 32 chars)",
     )
     DATABASE_URL: str = Field(
         "postgresql+asyncpg://retro:retro@localhost:5432/retrotube",
