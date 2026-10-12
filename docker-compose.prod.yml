@@ -1,0 +1,49 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://retro:retro@postgres:5432/retrotube
+      - REDIS_URL=redis://redis:6379/0
+      - YT_API_KEY=${YT_API_KEY}
+      - SECRET_KEY=${SECRET_KEY}
+      - FEATURED_REGION=${FEATURED_REGION:-US}
+      - ENABLE_RELATED=${ENABLE_RELATED:-0}
+      - HTTPS_ONLY=${HTTPS_ONLY:-0}
+      - YT_DAILY_BUDGET=${YT_DAILY_BUDGET:-9000}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: retro
+      POSTGRES_PASSWORD: retro
+      POSTGRES_DB: retrotube
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U retro -d retrotube"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:

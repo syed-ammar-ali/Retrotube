@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Categories - RetroTube{% endblock %}
+
+{% block content %}
+<h2 class="page-title">Browse Videos by Category{% if year %} ({{ year }}){% endif %}</h2>
+
+<div class="era-bar" style="margin-bottom:12px;padding:6px 10px;background:var(--sub-bar);border-radius:3px;">
+  <b>Time Machine Era:</b>
+  <a href="/categories" style="{% if not year %}font-weight:bold;color:#000;{% endif %}margin-right:8px;">All Time</a>
+  <span style="color:#999;">|</span>
+  {% for yr in eras %}
+  <a href="/categories?y={{ yr }}" style="{% if year == yr %}font-weight:bold;color:#000;{% endif %}margin:0 4px;">{{ yr }}</a>{% if not loop.last %} &middot; {% endif %}
+  {% endfor %}
+</div>
+
+{% set colors = ['#C0504D','#E08A1E','#8064A2','#4F81BD','#2E8B57','#B8860B','#D2691E','#4A6E8A','#7A7A2E','#CC6699','#3C8DBC','#6B8E23'] %}
+<div class="cat-panel">
+  {% for cid, cname in categories %}
+  {% set blurb, tags = info.get(cid, ('', [])) %}
+  <div class="cat">
+    <a class="ico" href="/browse?s=mp&amp;t=a&amp;c={{ cid }}{% if year %}&amp;y={{ year }}{% endif %}" style="background:{{ colors[loop.index0] }}">{{ cname[0] }}</a>
+    <a class="nm" href="/browse?s=mp&amp;t=a&amp;c={{ cid }}{% if year %}&amp;y={{ year }}{% endif %}">{{ cname }}</a><br>
+    {{ blurb }}
+    <div class="tags">Tags: {% for t in tags %}<a href="/results?search_query={{ t|urlencode }}{% if year %}&amp;year={{ year }}{% endif %}">{{ t }}</a>{{ ', ' if not loop.last }}{% endfor %}</div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

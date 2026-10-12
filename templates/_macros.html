@@ -1,0 +1,61 @@
+{# Read-only 5-star display, filled to the nearest half star like the original #}
+{% macro stars(value, size='') -%}
+{%- set val = [[value or 0, 0]|max, 5]|min -%}
+{%- set pct = (((val * 2)|round(0, 'common')) * 10)|int -%}
+<span class="stars {{ size }}" title="{{ '%.1f'|format(val) }} out of 5 stars"><span class="fill" style="width:{{ pct }}%"></span></span>
+{%- endmacro %}
+
+{# 120x90 thumbnail, framed like the original #}
+{% macro thumb(v) -%}
+<a class="thumb" href="/watch?v={{ v.id }}"><img src="{{ v.thumb|thumb120 }}" width="120" height="90" alt="{{ v.title }}"></a>
+{%- endmacro %}
+
+{# Grid tile: thumbnail, title, Runtime / From / Views / stars #}
+{% macro video_card(v) -%}
+<li>
+  {{ thumb(v) }}
+  <a class="vtitle" href="/watch?v={{ v.id }}">{{ v.title }}</a>
+  <span class="vmeta">
+    {%- if v.duration %}<b class="dur-text" style="color:#000">{{ v.duration }}</b><br>{% endif %}
+    {%- if v.channel %}<span class="lbl">From:</span> <a href="/results?search_query={{ v.channel|urlencode }}">{{ v.channel }}</a><br>{% endif %}
+    {%- if v.views %}<span class="lbl">Views:</span> <span class="v">{{ v.views }}</span><br>{% endif %}
+    {%- if v.stars is defined %}{{ stars(v.stars) }}{% endif %}
+  </span>
+</li>
+{%- endmacro %}
+
+{# Search / browse result row #}
+{% macro video_row(v) -%}
+<div class="video-row clearfix">
+  {{ thumb(v) }}
+  <a class="vtitle" href="/watch?v={{ v.id }}">{{ v.title }}</a> {% if v.duration %}<span class="dur-text">({{ v.duration }})</span>{% endif %}
+  {% set clean_desc = (v.description or '').split()|join(' ') %}
+  {% if clean_desc %}<div class="vdesc">{{ clean_desc[:160] }}{% if clean_desc|length > 160 %}...{% endif %}</div>{% endif %}
+  {% if v.tags %}<div class="tags"><span class="lbl">Tags:</span> {% for t in v.tags[:5] %}<a href="/results?search_query={{ t|urlencode }}">{{ t }}</a> {% endfor %}</div>{% endif %}
+  <div class="vmeta">
+    {% if v.published_iso %}<span class="lbl">Added:</span> {{ v.published_iso|ago }}<br>{% endif %}
+    <span class="lbl">From:</span> <a href="/results?search_query={{ v.channel|urlencode }}">{{ v.channel }}</a><br>
+    <span class="lbl">Views:</span> {{ v.views }}
+    {%- if v.stars is defined %}<br>{{ stars(v.stars) }}{% if v.ratings %} <span class="lbl">{{ v.ratings }} ratings</span>{% endif %}{% endif %}
+  </div>
+</div>
+{%- endmacro %}
+
+{# Compact sidebar entry: thumbnail left, text right #}
+{% macro sidebar_video(v) -%}
+<div class="sidebar-video clearfix">
+  {{ thumb(v) }}
+  <a class="vtitle" href="/watch?v={{ v.id }}">{{ v.title }}</a>
+  <div class="vmeta">{% if v.duration %}<b class="dur-text" style="color:#000">{{ v.duration }}</b><br>{% endif %}{% if v.channel %}<span class="lbl">From:</span> {{ v.channel }}{% endif %}{% if v.views %}<br><span class="lbl">Views:</span> <span class="v">{{ v.views }}</span>{% endif %}</div>
+</div>
+{%- endmacro %}
+
+{# Pages: 1 2 3 4 5 Next  (explicit pages only, never infinite scroll) #}
+{% macro pagination(base, page, total) -%}
+{%- if total > 1 -%}
+<div class="pagination"><span class="lead">Pages:</span>
+  {%- for n in range(1, total + 1) %}{% if n == page %}<span class="current">{{ n }}</span>{% else %}<a href="{{ base }}{{ n }}">{{ n }}</a>{% endif %}{% endfor %}
+  {%- if page < total %}<a href="{{ base }}{{ page + 1 }}">Next</a>{% endif %}
+</div>
+{%- endif -%}
+{%- endmacro %}

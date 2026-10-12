@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}RetroTube - Watch Like It's 2006{% endblock %}</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23CC181E'/%3E%3Ctext x='16' y='23' font-family='Arial' font-weight='bold' font-size='20' text-anchor='middle' fill='white'%3ER%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="/static/css/retro.css">
+</head>
+<body class="skin-{{ skin or '2006' }}">
+<div id="container">
+
+  <div id="header">
+    <a id="logo" href="/">Retro<span class="badge">Tube</span><small>beta</small></a>
+    <div id="tagline">Watch like it's 2006</div>
+    <div id="utility">
+      <span class="era-skin-picker">
+        <b>Theme:</b>
+        <a href="/skin/2006" class="era-skin-link{% if (skin or '2006') == '2006' %} active{% endif %}">2006</a>
+        <a href="/skin/2008" class="era-skin-link{% if skin == '2008' %} active{% endif %}">2008</a>
+        <a href="/skin/2009" class="era-skin-link{% if skin == '2009' %} active{% endif %}">2009</a>
+      </span>
+      <span class="sep">|</span>
+      {% if user %}
+        Hello, <a href="/profile/{{ user.username }}"><b>{{ user.username }}</b></a>
+        <span class="sep">|</span><a href="/profile/{{ user.username }}">My Account</a>
+        <span class="sep">|</span><a href="/history">History</a>
+        <span class="sep">|</span><a href="/help">Help</a>
+        <span class="sep">|</span>
+        <form action="/logout" method="post" class="inline-form">
+          <input type="hidden" name="csrf" value="{{ csrf }}">
+          <button class="linklike" type="submit">Log Out</button>
+        </form>
+      {% else %}
+        <a href="/register"><b>Sign Up</b></a><span class="sep">|</span><a href="/help">Help</a><span class="sep">|</span><a href="/login">Log In</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <ul id="tabs">
+    <li{% if active_tab == 'videos' %} class="active"{% endif %}><a href="/browse">Videos</a></li>
+    <li{% if active_tab == 'categories' %} class="active"{% endif %}><a href="/categories">Categories</a></li>
+    <li{% if active_tab == 'channels' %} class="active"{% endif %}><a href="/channels">Channels</a></li>
+    <li{% if active_tab == 'playlists' %} class="active"{% endif %}><a href="/playlists">Playlists</a></li>
+    <li{% if active_tab == 'community' %} class="active"{% endif %}><a href="/community">Community</a></li>
+    <li{% if active_tab == 'timemachine' %} class="active"{% endif %}><a href="/timemachine">Time Machine</a></li>
+  </ul>
+  <div id="searchbar"><form action="/results" method="get">
+    <input type="text" name="search_query" maxlength="100" value="{{ q or '' }}" aria-label="Search videos">
+    <button class="btn" type="submit">Search</button>
+    <a href="/random" class="btn time-warp-btn" title="Time Warp: Warp to a random classic viral video!">🎲 Time Warp</a>
+  </form></div>
+  {% block subnav %}<div id="page-top-gap"></div>{% endblock %}
+
+  <div class="clearfix">
+  {% block content %}{% endblock %}
+  </div>
+
+  <div id="footer">
+    <form action="/results" method="get" class="searchbox"><input type="text" name="search_query" maxlength="100" aria-label="Search videos"> <button class="btn" type="submit">Search</button></form>
+    <div class="cols">
+      <div><b>Your Account</b><a href="/profile/{{ user.username if user else '' }}">{{ 'Your Channel' if user else '' }}</a>{% if user %}<br><a href="/history">Viewing History</a>{% else %}<a href="/login">Log In</a><br><a href="/register">Sign Up</a>{% endif %}</div>
+      <div><b>Help &amp; Info</b><a href="/help">Help Center</a><br><a href="/timemachine">Time Machine</a><br><a href="/community">Community</a></div>
+      <div><b>RetroTube</b><a href="https://www.youtube.com/t/terms">YouTube Terms of Service</a><br><a href="https://policies.google.com/privacy">Google Privacy Policy</a></div>
+    </div>
+    <div class="legal">RetroTube is an unaffiliated fan project. Video playback and metadata are provided by YouTube. Dislike estimates by <a href="https://returnyoutubedislike.com">Return YouTube Dislike</a>. &copy; 2026 RetroTube</div>
+  </div>
+
+</div>
+</body>
+</html>

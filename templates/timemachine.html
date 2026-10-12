@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Time Machine - RetroTube{% endblock %}
+
+{% block content %}
+<h2 class="page-title">The Time Machine</h2>
+<p>Pick a year and step back in. See what the world was watching and rating, from 2006 to 2016.</p>
+
+<ul class="era-grid clearfix">
+  {% for y in eras %}
+  <li>
+    <div class="era-year">{{ y }}</div>
+    <div style="margin:3px 0;">
+      <a href="/browse?s=mp&amp;t=a&amp;y={{ y }}"><b>Most Viewed</b></a> &middot;
+      <a href="/browse?s=tr&amp;t=a&amp;y={{ y }}">Top Rated</a>
+    </div>
+    <div style="font-size:11px;color:var(--text-dim);margin-top:2px;">
+      <a href="/browse?s=mp&amp;t=a&amp;y={{ y }}&amp;c=10">Music</a> &middot;
+      <a href="/browse?s=mp&amp;t=a&amp;y={{ y }}&amp;c=23">Comedy</a> &middot;
+      <a href="/browse?s=mp&amp;t=a&amp;y={{ y }}&amp;c=20">Games</a>
+    </div>
+  </li>
+  {% endfor %}
+</ul>
+
+<p class="muted">Only videos that YouTube still hosts and allows embedding can play here, so a few legends from back then may be missing.</p>
+{% endblock %}

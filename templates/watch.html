@@ -1,0 +1,292 @@
+{% extends "base.html" %}
+{% from "_macros.html" import stars, sidebar_video, pagination %}
+{% block title %}{{ video.title }} - RetroTube{% endblock %}
+
+{% block content %}
+<h1 class="watch-title">{{ video.title }}</h1>
+<div class="col-main">
+  {# Official YouTube embed, unframed and untouched #}
+  <div class="player-wrapper" id="player-wrapper">
+    <div class="player" id="main-player">
+      <iframe id="video-iframe" src="{{ video.embed_url }}" title="{{ video.title }}"
+              allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+              allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+      <div id="crt-overlay" class="crt-overlay" hidden></div>
+    </div>
+    <div class="player-toolbar">
+      <a href="#" id="toggle-hq" class="toolbar-btn" title="Watch in High Quality (&fmt=18)">Watch in High Quality</a>
+      <span class="sep">|</span>
+      <a href="#" id="toggle-crt" class="toolbar-btn" title="Toggle CRT scanline monitor effect">📺 CRT Monitor</a>
+    </div>
+  </div>
+
+  <div class="meta-box">
+    <div>
+      <b>Rate this video:</b><br>
+      {{ stars(video.display_stars, 'big') }}<br>
+      <span class="rating-text" style="margin-left:0">
+        {% if video.ratings_total %}{{ video.ratings_total }} ratings
+        {% elif video.local_count %}{{ video.local_count }} rating{{ '' if video.local_count == 1 else 's' }}
+        {% else %}Not yet rated{% endif %}</span>
+      <div class="rate-row">
+        {% if user %}
+        <span class="rate-widget" id="rate-widget" data-video="{{ video.id }}" data-csrf="{{ csrf }}" data-mine="{{ video.user_stars or 0 }}">
+          {% for n in [5, 4, 3, 2, 1] %}<input type="radio" name="rating" id="r{{ n }}" value="{{ n }}"{% if video.user_stars == n %} checked{% endif %}><label for="r{{ n }}" data-n="{{ n }}">&#9733;</label>{% endfor %}
+        </span><br><span id="rate-label"></span>
+        {% else %}<a href="/login">Log in</a> to rate.{% endif %}
+      </div>
+      {% if video.local_count %}<div class="rating-text" style="margin:0">Members: <span id="local-avg">{{ '%.1f'|format(video.local_avg) }}</span> from <span id="local-count">{{ video.local_count }}</span></div>{% endif %}
+      {% if ratings_breakdown %}
+      <div><a href="#" id="toggle-breakdown" class="breakdown-toggle">(show rating details)</a></div>
+      <div id="ratings-breakdown-box" class="ratings-breakdown-box" hidden>
+        {% for s_num in [5, 4, 3, 2, 1] %}
+        <div class="breakdown-row">
+          <span class="breakdown-star">{{ s_num }}★</span>
+          <div class="breakdown-bar-wrap">
+            <div class="breakdown-bar" style="width: {{ ratings_breakdown[s_num].pct }}%"></div>
+          </div>
+          <span class="breakdown-pct">{{ ratings_breakdown[s_num].pct }}%</span>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+    <div>
+      <ul>
+        <li><a href="#share" id="share-link">Share Video</a></li>
+        {% if user %}<li><form action="/favorite" method="post" class="inline-form">
+          <input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="video_id" value="{{ video.id }}">
+          <button class="linklike" type="submit">{{ 'Remove from Favorites' if video.is_favorite else 'Add to Favorites' }}</button></form></li>{% endif %}
+        {% if user and user_playlists %}
+        <li>
+          <a href="#" id="playlist-add-toggle">Add to Playlist</a>
+          <div id="playlist-add-dropdown" class="playlist-dropdown" hidden>
+            <form action="/playlist/add" method="post">
+              <input type="hidden" name="csrf" value="{{ csrf }}">
+              <input type="hidden" name="video_id" value="{{ video.id }}">
+              <select name="playlist_id" class="text-input" style="width:130px;font-size:10px;">
+                {% for pl in user_playlists %}
+                <option value="{{ pl.id }}">{{ pl.title }}</option>
+                {% endfor %}
+              </select>
+              <button class="btn btn-sm" type="submit">Add</button>
+            </form>
+          </div>
+        </li>
+        {% endif %}
+        <li><a href="#comments">Post a Comment</a></li>
+        <li><a href="https://www.youtube.com/watch?v={{ video.id }}">View on YouTube</a></li>
+      </ul>
+    </div>
+    <div>
+      <span class="lbl">Views:</span> <b>{{ video.views|commas }}</b><br>
+      <span class="lbl">Comments:</span> <b>{{ total_comments }}</b><br>
+      {% if video.duration %}<span class="lbl">Runtime:</span> <b>{{ video.duration }}</b>{% endif %}
+    </div>
+  </div>
+  <div class="share-panel" id="share-panel" hidden>
+    <div class="field"><label for="share-url">URL</label>
+      <input class="share-input" id="share-url" type="text" readonly value="{{ request.base_url }}watch?v={{ video.id }}" onclick="this.select()"></div>
+    <div class="field"><label for="share-embed">Embed</label>
+      <input class="share-input" id="share-embed" type="text" readonly value="{{ video.embed_code }}" onclick="this.select()"></div>
+  </div>
+  <noscript><style>#share-panel { display: block; }</style></noscript>
+
+  {% if honors %}
+  <div class="honors-card">
+    <div class="honors-header">Honors for this video:</div>
+    <ul class="honors-list">
+      {% for h in honors %}
+      <li><span class="honor-rank">#{{ h.rank }}</span> - {{ h.title }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
+  <div class="box responses-box">
+    <div class="box-title">
+      Video Responses ({{ video_responses|length }})
+      {% if user %}
+      <a href="#" id="btn-toggle-response-form" class="box-action-link">[Post a Video Response]</a>
+      {% endif %}
+    </div>
+    <div class="box-body">
+      {% if user %}
+      <div id="response-form-wrap" class="response-form-wrap" hidden>
+        <form action="/video-response" method="post" class="response-form">
+          <input type="hidden" name="csrf" value="{{ csrf }}">
+          <input type="hidden" name="parent_video_id" value="{{ video.id }}">
+          <div style="margin-bottom:4px"><b>Post a Video Response:</b> Enter a YouTube URL or 11-char Video ID:</div>
+          <input type="text" name="response_video_input" placeholder="e.g. dQw4w9WgXcQ or https://youtube.com/watch?v=..." class="share-input" style="width:280px" required>
+          <button class="btn" type="submit">Submit Response</button>
+        </form>
+      </div>
+      {% endif %}
+      {% if video_responses %}
+      <div class="response-grid">
+        {% for vr in video_responses %}
+        <div class="response-item">
+          <a href="/watch?v={{ vr.response_video_id }}" class="thumb">
+            <img src="{{ vr.thumbnail|thumb120 }}" width="120" height="90" alt="{{ vr.title }}">
+          </a>
+          <div class="vtitle"><a href="/watch?v={{ vr.response_video_id }}">{{ vr.title }}</a></div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="muted">No video responses yet. {% if not user %}<a href="/login">Log in</a> to post one.{% endif %}</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div id="comments">
+    <div class="comment-head"><b>Recent Comments</b> ({{ total_comments }} total)</div>
+    {% if user %}
+    <form action="/comment" method="post" style="padding:6px 0">
+      <input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="video_id" value="{{ video.id }}">
+      <textarea class="comment-box" name="body" maxlength="500" required placeholder="Post a text comment (500 characters max)"></textarea>
+      <button class="btn" type="submit">Post Comment</button>
+    </form>
+    {% else %}<p style="padding:6px 0"><a href="/login">Log in</a> or <a href="/register">sign up</a> to post a comment.</p>{% endif %}
+    {% for c in comments %}
+    <div class="comment"><a class="who" href="/profile/{{ c.username }}">{{ c.username }}</a><span class="when">({{ c.created_at.isoformat()|ago }})</span>
+      <div class="vdesc">{{ c.body }}</div></div>
+    {% else %}<p class="muted">No comments yet. Be the first!</p>{% endfor %}
+    {{ pagination(comment_base, cp, comment_pages) }}
+  </div>
+</div>
+
+<div class="col-mid">
+  <div class="box about">
+    <div class="box-title">About This Video</div>
+    <div class="box-body">
+      {% if video.year and 2006 <= video.year <= 2016 %}<div class="capsule">Time capsule: added in {{ video.year }}.</div>{% endif %}
+      <dl>
+        <dt>Added:</dt><dd>{{ video.published }}</dd>
+        <dt>From:</dt><dd><a href="https://www.youtube.com/channel/{{ video.channel_id }}">{{ video.channel }}</a></dd>
+        {% if video.category %}<dt>Category:</dt><dd>{% for cid, cname in CATEGORIES if cid == video.category_id %}<a href="/browse?s=mp&amp;t=a&amp;c={{ cid }}">{{ cname }}</a>{% else %}{{ video.category }}{% endfor %}</dd>{% endif %}
+        {% if video.tags %}<dt>Tags:</dt><dd>{% for t in video.tags %}<a href="/results?search_query={{ t|urlencode }}">{{ t }}</a>{{ ' ' }}{% endfor %}</dd>{% endif %}
+      </dl>
+      {% if video.description %}<div class="desc vdesc">{{ video.description[:300] }}{% if video.description|length > 300 %}...{% endif %}</div>{% endif %}
+      <dl>
+        <dt>URL:</dt><dd><input type="text" readonly value="{{ request.base_url }}watch?v={{ video.id }}" onclick="this.select()"></dd>
+        <dt>Embed:</dt><dd><input type="text" readonly value="{{ video.embed_code }}" onclick="this.select()"></dd>
+      </dl>
+    </div>
+  </div>
+  {% if related or era_videos %}
+  <div class="box">
+    <div class="box-title">Explore More Videos</div>
+    <div class="box-body scroll-list">
+      {% for r in related %}{{ sidebar_video(r) }}{% endfor %}
+      {% for r in era_videos %}{{ sidebar_video(r) }}{% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<div class="col-thin">
+  <div class="box">
+    <div class="box-title">Your History</div>
+    <div class="box-body">
+      {% if user %}
+        {% for h in history %}<a class="thumb" href="/watch?v={{ h.id }}" style="margin-bottom:6px"><img src="{{ h.thumb|thumb120 }}" width="120" height="90" alt="{{ h.title }}"></a>{% else %}<p class="muted">Nothing yet.</p>{% endfor %}
+      {% else %}<a href="/login">Log in</a> to keep a history.{% endif %}
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  // Share panel
+  var link = document.getElementById('share-link'), panel = document.getElementById('share-panel');
+  if (link && panel) {
+    link.addEventListener('click', function (e) { e.preventDefault(); panel.hidden = !panel.hidden; });
+  }
+
+  // Rating details toggle
+  var btnBreakdown = document.getElementById('toggle-breakdown');
+  var boxBreakdown = document.getElementById('ratings-breakdown-box');
+  if (btnBreakdown && boxBreakdown) {
+    btnBreakdown.addEventListener('click', function(e) {
+      e.preventDefault();
+      boxBreakdown.hidden = !boxBreakdown.hidden;
+      btnBreakdown.textContent = boxBreakdown.hidden ? '(show rating details)' : '(hide rating details)';
+    });
+  }
+
+  // Playlist toggle
+  var btnPl = document.getElementById('playlist-add-toggle');
+  var dropPl = document.getElementById('playlist-add-dropdown');
+  if (btnPl && dropPl) {
+    btnPl.addEventListener('click', function(e) {
+      e.preventDefault();
+      dropPl.hidden = !dropPl.hidden;
+    });
+  }
+
+  // Response form toggle
+  var btnResp = document.getElementById('btn-toggle-response-form');
+  var formResp = document.getElementById('response-form-wrap');
+  if (btnResp && formResp) {
+    btnResp.addEventListener('click', function(e) {
+      e.preventDefault();
+      formResp.hidden = !formResp.hidden;
+    });
+  }
+
+  // Rating widget
+  var w = document.getElementById('rate-widget');
+  if (w) {
+    var label = document.getElementById('rate-label');
+    var words = ['', 'Poor', 'Nothing special', 'Worth watching', 'Pretty cool', 'Awesome!'];
+    var base = parseInt(w.getAttribute('data-mine'), 10) || 0;
+    function idle() { label.textContent = base ? 'Your rating: ' + words[base] : ''; }
+    idle();
+    w.addEventListener('mouseover', function (e) {
+      var n = e.target.getAttribute && e.target.getAttribute('data-n');
+      if (n) { label.textContent = words[parseInt(n, 10)]; }
+    });
+    w.addEventListener('mouseleave', idle);
+    w.addEventListener('change', function (e) {
+      var n = parseInt(e.target.value, 10);
+      fetch('/api/rate', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json', 'X-CSRF-Token': w.getAttribute('data-csrf')},
+        body: JSON.stringify({video_id: w.getAttribute('data-video'), stars: n})
+      }).then(function (r) { return r.json(); }).then(function (d) {
+        if (d.ok) {
+          base = n; label.textContent = 'Thank you for rating!';
+          var a = document.getElementById('local-avg'), c = document.getElementById('local-count');
+          if (a) { a.textContent = d.local_avg.toFixed(1); }
+          if (c) { c.textContent = d.local_count; }
+        } else {
+          label.textContent = 'Sorry: ' + (d.detail || 'could not save rating.');
+        }
+      }).catch(function () { label.textContent = 'Sorry: could not save rating.'; });
+    });
+  }
+
+  // HQ Toggle
+  var btnHq = document.getElementById('toggle-hq');
+  if (btnHq) {
+    btnHq.addEventListener('click', function(e) {
+      e.preventDefault();
+      alert('2006 HQ Mode: Requested &fmt=18 (High Quality MP4 stereo stream).');
+    });
+  }
+
+  // CRT Monitor Toggle
+  var btnCrt = document.getElementById('toggle-crt');
+  var crtOverlay = document.getElementById('crt-overlay');
+  if (btnCrt && crtOverlay) {
+    btnCrt.addEventListener('click', function(e) {
+      e.preventDefault();
+      crtOverlay.hidden = !crtOverlay.hidden;
+      btnCrt.classList.toggle('active', !crtOverlay.hidden);
+    });
+  }
+
+})();
+</script>
+{% endblock %}

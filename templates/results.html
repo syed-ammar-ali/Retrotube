@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% from "_macros.html" import video_row, pagination %}
+{% block title %}{{ q }} - RetroTube{% endblock %}
+
+{% block subnav %}
+<div id="subnav">
+  <span class="group"><span class="title">Sort by:</span>
+    {% for s in sorts %}{% if s.key == order %}<b>{{ s.label }}</b>{% else %}<a href="{{ s.href }}">{{ s.label }}</a>{% endif %}{% if not loop.last %}<span class="sep">|</span>{% endif %}{% endfor %}
+  </span>
+</div>
+{% endblock %}
+
+{% block content %}
+<h2 class="page-title">Search results for <b>{{ q }}</b>{% if year %} from {{ year }}{% endif %}</h2>
+
+{% if data.videos %}
+  <div class="head-bar">Videos {{ (data.page - 1) * 10 + 1 }} - {{ (data.page - 1) * 10 + data.videos|length }}</div>
+  {% for v in data.videos %}{{ video_row(v) }}{% endfor %}
+  {{ pagination(base, data.page, data.total_pages) }}
+{% else %}
+  <p>Your search <b>{{ q }}</b> did not match any videos{% if data.page > 1 %} on this page{% endif %}.</p>
+  <p class="muted">Suggestions: make sure all words are spelled correctly, try different keywords, or try more general keywords.</p>
+  {% if data.page > 1 %}{{ pagination(base, data.page, data.total_pages) }}{% endif %}
+{% endif %}
+{% endblock %}

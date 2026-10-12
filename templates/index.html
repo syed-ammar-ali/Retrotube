@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% from "_macros.html" import video_card, video_row %}
+
+{% block content %}
+<div class="col-home-main">
+  {% if videos %}
+  <div class="head-bar">Videos being watched right now&hellip;</div>
+  <ul class="video-grid">
+    {% for v in (watching or videos)[:8] %}{{ video_card(v) }}{% endfor %}
+  </ul>
+
+  <div class="head-bar">Promoted Videos</div>
+  <ul class="video-grid">
+    {% for v in videos[:8] %}{{ video_card(v) }}{% endfor %}
+  </ul>
+
+  <div class="head-bar">Featured Videos</div>
+  <div class="tab-strip"><b>Featured</b><a href="/browse?s=mp&amp;t=a">Most Viewed</a><a href="/browse?s=tr&amp;t=a">Top Rated</a><a href="/browse?s=mr&amp;t=a">Most Recent</a></div>
+  <div class="list-pane">
+    {% for v in videos[4:10] %}{{ video_row(v) }}{% endfor %}
+    <div class="box-more"><a href="/browse">See More Videos</a></div>
+  </div>
+  {% else %}
+  <p>Featured videos are taking a coffee break. Try a search above!</p>
+  {% endif %}
+</div>
+
+<div class="col-home-side">
+  {% if user %}
+  <div class="box">
+    <div class="box-title">Hello, {{ user.username }}!</div>
+    <div class="box-body"><ul class="link-list">
+      <li><a href="/profile/{{ user.username }}">My Channel</a></li>
+      <li><a href="/history">Viewing History</a></li>
+    </ul></div>
+  </div>
+  {% else %}
+  <div class="box">
+    <div class="box-title">Member Login</div>
+    <div class="box-body login-box">
+      <form action="/login" method="post">
+        <input type="hidden" name="csrf" value="{{ csrf }}">
+        <label for="lu">User Name:</label>
+        <input class="text-input" id="lu" name="username" maxlength="20" autocomplete="username">
+        <label for="lp">Password:</label>
+        <input class="text-input" id="lp" name="password" type="password" maxlength="128" autocomplete="current-password">
+        <p style="margin-top:6px"><button class="btn" type="submit">Login</button></p>
+      </form>
+      Not a member? <a href="/register"><b>Sign Up</b></a>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="box cream">
+    <div class="box-title">What's New</div>
+    <div class="box-body">
+      Welcome back to the good old days. Pick a year in the <a href="/timemachine"><b>Time Machine</b></a>
+      and see what everyone was watching, or sign up to rate, comment and decorate your own channel page.
+    </div>
+  </div>
+
+  <div class="box">
+    <div class="box-title">Time Machine</div>
+    <div class="box-body">
+      {% for y in ERAS %}<a href="/browse?s=mp&amp;t=a&amp;y={{ y }}">{{ y }}</a>{% if not loop.last %} &middot; {% endif %}{% endfor %}
+    </div>
+  </div>
+
+  <div class="box">
+    <div class="box-title">Popular Tags</div>
+    <div class="box-body tag-cloud">
+      {% for t in tags %}<a class="t{{ t.size }}" href="/results?search_query={{ t.name|urlencode }}">{{ t.name }}</a> {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

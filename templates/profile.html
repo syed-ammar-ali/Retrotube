@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% from "_macros.html" import video_card, pagination %}
+{% block title %}{{ target.username }}'s Channel - RetroTube{% endblock %}
+
+{% block content %}
+<h1 style="margin-top:6px">{{ target.username }}'s Channel</h1>
+
+<div class="profile-wallpaper clearfix" style="{{ wallpaper }}">
+
+  <div class="col-left">
+    <div class="profile-box">
+      <div class="box-title">Channel Info</div>
+      <div class="box-body">
+        <dl class="profile-stats">
+          <dt>Joined:</dt><dd>{{ target.joined_at.strftime('%B %d, %Y') }}</dd>
+          <dt>Favorites:</dt><dd>{{ fav_total }}</dd>
+          <dt>Ratings:</dt><dd>{{ rating_count }}</dd>
+          <dt>Comments:</dt><dd>{{ comment_count }}</dd>
+        </dl>
+        {% if target.about %}<div class="vdesc" style="clear:both;padding-top:6px">{{ target.about }}</div>{% endif %}
+      </div>
+    </div>
+
+    {% if top_friends %}
+    <div class="profile-box">
+      <div class="box-title">Top Friends ({{ top_friends|length }})</div>
+      <div class="box-body">
+        <div class="friends-grid">
+          {% for f in top_friends %}
+          <div class="friend-cell">
+            <a href="/profile/{{ f.username }}" class="friend-avatar">
+              <div class="avatar-placeholder">{{ f.username[:2]|upper }}</div>
+            </a>
+            <a href="/profile/{{ f.username }}" class="friend-name">{{ f.username }}</a>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if is_owner %}
+    <div class="profile-box">
+      <div class="box-title">Channel Design</div>
+      <div class="box-body">
+        <div class="theme-presets-bar" style="margin-bottom:8px">
+          <b>Vintage Presets:</b><br>
+          <div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:4px;">
+            <button type="button" class="btn btn-sm preset-btn" data-color="#245EDC" data-url="" data-about="Living the Windows XP Luna dream in 2006.">XP Luna</button>
+            <button type="button" class="btn btn-sm preset-btn" data-color="#0D0208" data-url="" data-about="Wake up Neo... The Matrix has you.">Matrix Green</button>
+            <button type="button" class="btn btn-sm preset-btn" data-color="#1A0022" data-url="" data-about="xX_NotASceneKid_Xx. Because tonight will be the night that I will fall for you.">Emo / MCR</button>
+            <button type="button" class="btn btn-sm preset-btn" data-color="#550000" data-url="" data-about="Speed, flames, and heavy metal rock.">Flame Rod</button>
+            <button type="button" class="btn btn-sm preset-btn" data-color="#FF69B4" data-url="" data-about="Sparkles, glitter, and early web kawaii! ☆*:.｡.o(≧▽≦)o.｡.:*☆">Glitter Pink</button>
+          </div>
+        </div>
+        <form action="/profile/theme" method="post" id="theme-form">
+          <input type="hidden" name="csrf" value="{{ csrf }}">
+          <div class="form-row"><label for="bg_color">Background color:</label>
+            <input class="text-input" id="bg_color" name="bg_color" placeholder="#CC181E" maxlength="7" value="{{ target.profile_theme.get('bg_color', '') }}"></div>
+          <div class="form-row"><label for="bg_url">Background image (https URL):</label>
+            <input class="text-input" id="bg_url" name="bg_url" maxlength="500" value="{{ target.profile_theme.get('bg_url', '') }}"></div>
+          <div class="form-row"><label for="about">About me:</label>
+            <textarea class="comment-box" id="about" name="about" maxlength="1000">{{ target.about }}</textarea></div>
+          <button class="btn" type="submit">Update Channel</button>
+        </form>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="col-right">
+    <div class="profile-box">
+      <div class="box-title">Favorites ({{ fav_total }})</div>
+      <div class="box-body clearfix">
+        {% if favorites %}
+        <ul class="video-grid">{% for v in favorites %}{{ video_card(v) }}{% endfor %}</ul>
+        {{ pagination(fav_base, fp, fav_pages) }}
+        {% else %}
+        <p class="muted">No favorites yet.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if playlists %}
+    <div class="profile-box">
+      <div class="box-title">{{ target.username }}'s Playlists ({{ playlists|length }})</div>
+      <div class="box-body">
+        <ul class="clean-list">
+          {% for pl in playlists %}
+          <li style="margin-bottom:6px">
+            <a href="/playlists/{{ pl.id }}"><b>{{ pl.title }}</b></a>
+            {% if pl.description %}<span class="muted"> - {{ pl.description }}</span>{% endif %}
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="profile-box">
+      <div class="box-title">Bulletins</div>
+      <div class="box-body">
+        {% if is_owner %}
+        <form action="/profile/bulletin" method="post">
+          <input type="hidden" name="csrf" value="{{ csrf }}">
+          <textarea class="comment-box" name="body" maxlength="500" required placeholder="Post a bulletin to your channel (500 characters max)"></textarea>
+          <button class="btn" type="submit">Post Bulletin</button>
+        </form>
+        {% endif %}
+        {% for b in target.bulletins %}
+        <div class="bulletin"><span class="muted">{{ b.created_at }}</span><div class="vdesc">{{ b.body }}</div></div>
+        {% else %}
+        <p class="muted">No bulletins posted.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function() {
+  var presetBtns = document.querySelectorAll('.preset-btn');
+  var bgColor = document.getElementById('bg_color');
+  var bgUrl = document.getElementById('bg_url');
+  var about = document.getElementById('about');
+  presetBtns.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      if (bgColor) bgColor.value = btn.getAttribute('data-color') || '';
+      if (bgUrl) bgUrl.value = btn.getAttribute('data-url') || '';
+      if (about && btn.getAttribute('data-about')) about.value = btn.getAttribute('data-about');
+    });
+  });
+})();
+</script>
+{% endblock %}

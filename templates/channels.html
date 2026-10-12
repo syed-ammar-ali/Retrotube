@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Channels - RetroTube{% endblock %}
+
+{% block content %}
+<h2 class="page-title">Channels</h2>
+<p class="muted">Every RetroTube member gets a channel page of their own. Newest channels first.</p>
+{% set colors = ['#C0504D','#E08A1E','#8064A2','#4F81BD','#2E8B57','#CC6699'] %}
+<div class="chan-grid">
+{% for m in members %}
+  <div class="chan">
+    <span class="av" style="background:{{ colors[loop.index0 % 6] }}">{{ m.username[0]|upper }}</span>
+    <a class="nm" href="/profile/{{ m.username }}">{{ m.username }}</a><br>
+    <span class="lbl">Joined:</span> {{ m.joined_at.strftime('%B %d, %Y') }}
+    {% if m.about %}<div>{{ m.about[:80] }}{% if m.about|length > 80 %}...{% endif %}</div>{% endif %}
+  </div>
+{% else %}
+  <p>No channels yet. <a href="/register">Sign up</a> to start the first one!</p>
+{% endfor %}
+</div>
+{% endblock %}

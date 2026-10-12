@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Oops! - RetroTube{% endblock %}
+
+{% block content %}
+<div class="box" style="width:460px;margin:20px auto;">
+  <div class="box-title">Oops!{% if status == 404 %} We can't find that page.{% endif %}</div>
+  <div class="box-body">
+    <p>{{ message }}</p>
+    <p><a href="/">Back to the home page</a>{% if status == 401 %} &middot; <a href="/login">Log in</a>{% endif %}</p>
+  </div>
+</div>
+{% endblock %}

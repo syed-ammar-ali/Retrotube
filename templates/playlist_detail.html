@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}{{ playlist.title }} - Playlist - RetroTube{% endblock %}
+
+{% block content %}
+<h1 style="margin-top:6px">{{ playlist.title }}</h1>
+<div class="muted" style="margin-bottom:8px">
+  Created by <a href="/profile/{{ owner.username }}"><b>{{ owner.username }}</b></a> &bull; {{ items|length }} video{{ '' if items|length == 1 else 's' }}
+  {% if playlist.description %}<div style="margin-top:4px">{{ playlist.description }}</div>{% endif %}
+</div>
+
+{% if current_vid %}
+<div class="col-main">
+  <div class="player">
+    <iframe src="https://www.youtube.com/embed/{{ current_vid }}?rel=0&playsinline=1&autoplay=1" title="Playlist Player"
+            allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+            allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+  </div>
+
+  <div class="playlist-player-bar">
+    <span>Now Playing: <b>{{ current_vid }}</b></span>
+    {% if next_vid %}
+    <a href="/playlists/{{ playlist.id }}?v={{ next_vid }}" class="btn btn-sm">▶ Next Video</a>
+    {% endif %}
+  </div>
+
+  {% if is_owner %}
+  <div class="box" style="margin-top:12px">
+    <div class="box-title">Add Video to this Playlist</div>
+    <div class="box-body">
+      <form action="/playlist/add" method="post" class="inline-form">
+        <input type="hidden" name="csrf" value="{{ csrf }}">
+        <input type="hidden" name="playlist_id" value="{{ playlist.id }}">
+        <input type="text" name="video_id" class="share-input" placeholder="Enter 11-char Video ID (e.g. dQw4w9WgXcQ)" required style="width:260px">
+        <button class="btn btn-sm" type="submit">Add Video</button>
+      </form>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<div class="col-side">
+  <div class="box">
+    <div class="box-title">Playlist Videos ({{ items|length }})</div>
+    <div class="box-body scroll-list">
+      {% for item in items %}
+      <div class="sidebar-video{% if item.video_id == current_vid %} active-pl-item{% endif %}" style="padding:4px 0; border-bottom:1px dotted #ccc">
+        <a class="thumb" href="/playlists/{{ playlist.id }}?v={{ item.video_id }}">
+          <img src="{{ item.thumbnail|thumb120 }}" width="120" height="90" alt="{{ item.title }}">
+        </a>
+        <div class="vtitle">
+          <span style="font-size:10px; color:#888;">#{{ loop.index }}</span>
+          <a href="/playlists/{{ playlist.id }}?v={{ item.video_id }}"><b>{{ item.title }}</b></a>
+        </div>
+      </div>
+      {% else %}
+      <p class="muted">No videos in this playlist yet.</p>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% else %}
+<div class="box">
+  <div class="box-title">Empty Playlist</div>
+  <div class="box-body">
+    <p class="muted">This playlist has no videos yet.</p>
+    {% if is_owner %}
+    <form action="/playlist/add" method="post" style="margin-top:10px">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <input type="hidden" name="playlist_id" value="{{ playlist.id }}">
+      <label>Add video by ID:</label>
+      <input type="text" name="video_id" class="share-input" placeholder="e.g. dQw4w9WgXcQ" required style="width:200px">
+      <button class="btn" type="submit">Add</button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}

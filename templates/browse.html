@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% from "_macros.html" import video_card, pagination %}
+{% block title %}{{ title }} - RetroTube{% endblock %}
+
+{% block content %}
+<div class="col-rail rail">
+  <h3>Browse</h3>
+  <ul>{% for s in sort_links %}<li{% if s.active %} class="on"{% endif %}>{% if s.active %}<b>{{ s.label }}</b>{% else %}<a href="{{ s.href }}">{{ s.label }}</a>{% endif %}</li>{% endfor %}</ul>
+  <h3>Time</h3>
+  <ul>{% for t in time_links or [] %}<li{% if t.active %} class="on"{% endif %}>{% if t.active %}<b>{{ t.label }}</b>{% else %}<a href="{{ t.href }}">{{ t.label }}</a>{% endif %}</li>{% endfor %}
+  {% if year_i %}<li class="on"><b>{{ year_i }}</b></li>{% endif %}</ul>
+  <h3>Time Machine</h3>
+  <ul>{% for y in rail_years %}<li{% if y.active %} class="on"{% endif %}>{% if y.active %}<b>{{ y.label }}</b>{% else %}<a href="{{ y.href }}">{{ y.label }}</a>{% endif %}</li>{% endfor %}</ul>
+  <h3>Category</h3>
+  <ul>{% for c in cat_links %}<li{% if c.active %} class="on"{% endif %}>{% if c.active %}<b>{{ c.label }}</b>{% else %}<a href="{{ c.href }}">{{ c.label }}</a>{% endif %}</li>{% endfor %}</ul>
+</div>
+
+<div class="col-wide">
+  {% if milestones and data.page == 1 and not cat %}
+  <div class="head-bar" style="margin-bottom:8px;">{{ year_i }} Hall of Fame &middot; Definitive Viral Milestones</div>
+  <ul class="video-grid" style="margin-bottom:18px;">
+    {% for v in milestones %}{{ video_card(v) }}{% endfor %}
+  </ul>
+  {% endif %}
+
+  {% if year_i %}
+  <div class="tab-strip" style="margin-bottom:10px;overflow-x:auto;">
+    {% for c in cat_links %}
+      {% if c.active %}<b>{{ c.label }}</b>{% else %}<a href="{{ c.href }}">{{ c.label }}</a>{% endif %}
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <h2 class="page-title">{{ heading }}</h2>
+  {% if data.videos %}
+    {{ pagination(base, data.page, data.total_pages) }}
+    <ul class="video-grid">
+      {% for v in data.videos %}{{ video_card(v) }}{% endfor %}
+    </ul>
+    <div class="page-bar">{{ pagination(base, data.page, data.total_pages) }}</div>
+  {% else %}
+    <p>No videos found here{% if data.page > 1 %} on this page{% endif %}. Try another time range or category.</p>
+    {% if data.page > 1 %}{{ pagination(base, data.page, data.total_pages) }}{% endif %}
+  {% endif %}
+</div>
+{% endblock %}

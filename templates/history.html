@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% from "_macros.html" import pagination, thumb %}
+{% block title %}My History - RetroTube{% endblock %}
+
+{% block content %}
+<h2 class="page-title">Your Viewing History <span class="muted">({{ total }})</span></h2>
+
+{% for h in items %}
+<div class="video-row clearfix">
+  {{ thumb(h) }}
+  <a class="vtitle" href="/watch?v={{ h.id }}">{{ h.title }}</a>
+  <div class="vmeta"><span class="lbl">From:</span> {{ h.channel }}<br><span class="lbl">Watched:</span> {{ h.watched }}</div>
+</div>
+{% else %}
+<p>Nothing here yet. <a href="/timemachine">Hop in the Time Machine</a> and start watching!</p>
+{% endfor %}
+
+{{ pagination(base, page, pages) }}
+
+{% if total %}
+<form action="/history/clear" method="post">
+  <input type="hidden" name="csrf" value="{{ csrf }}">
+  <button class="btn" type="submit" onclick="return confirm('Clear your entire viewing history?');">Clear All History</button>
+</form>
+{% endif %}
+{% endblock %}

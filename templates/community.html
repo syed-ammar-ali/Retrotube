@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Community - RetroTube{% endblock %}
+
+{% block content %}
+<div class="col-home-main">
+  <div class="box">
+    <div class="box-title">Recent Comments</div>
+    <div class="box-body">
+      {% for c in comments %}
+      <div class="comment">
+        <a class="who" href="/profile/{{ c.user }}">{{ c.user }}</a> on
+        <a href="/watch?v={{ c.video_id }}">{{ c.title }}</a>
+        <span class="when">({{ c.when|ago }})</span>
+        <div class="vdesc">{{ c.body }}</div>
+      </div>
+      {% else %}
+      <p class="muted">No comments yet. Find a video and start the conversation.</p>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+<div class="col-home-side">
+  <div class="box">
+    <div class="box-title">New Members</div>
+    <div class="box-body">
+      <ul class="link-list">
+        {% for m in members %}<li><a href="/profile/{{ m }}">{{ m }}</a></li>{% else %}<li class="muted">Nobody yet.</li>{% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}

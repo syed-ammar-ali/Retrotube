@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Help - RetroTube{% endblock %}
+
+{% block content %}
+<h2 class="page-title">RetroTube Help</h2>
+<dl class="help">
+  <dt>What is RetroTube?</dt>
+  <dd>A fan-made throwback to the early days of online video. It is not affiliated with or endorsed by YouTube or Google.</dd>
+
+  <dt>Can I upload videos?</dt>
+  <dd>No. RetroTube is watch-only. You can rate videos, comment, save favorites, keep a viewing history and decorate your own channel page.</dd>
+
+  <dt>Where do the videos come from?</dt>
+  <dd>Videos play in YouTube's own embedded player, and titles, thumbnails and view counts come from the YouTube API. Only videos that their owners allow to be embedded can be shown, so some old favorites won't appear here.</dd>
+
+  <dt>How are the star ratings worked out?</dt>
+  <dd>YouTube now uses likes and dislikes, so we convert them: 1 + 4 &times; likes &divide; (likes + dislikes). Dislike counts are estimates from Return YouTube Dislike. If you rate a video yourself, your own rating is the one you see.</dd>
+
+  <dt>What is the Time Machine?</dt>
+  <dd>It lets you browse the most viewed and top rated videos of any year from 2006 to 2016.</dd>
+
+  <dt>What do you keep about me?</dt>
+  <dd>Your username, a password hash, and what you rate, comment on, favorite and watch. Nothing is shared with anyone else except the comments and channel details you choose to post. Use "Clear All History" on the History page whenever you like.</dd>
+</dl>
+{% endblock %}
